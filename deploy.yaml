@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logmonitor
+  labels:
+    app: logmonitor
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: logmonitor
+      labels:
+        app: logmonitor
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": windows
+      containers:
+      - name: logmonitor
+        image: tsubasaxzzz/logmonitortest:0.6
+        resources:
+          limits:
+            cpu: 1
+            memory: 800M
+          requests:
+            cpu: .1
+            memory: 300M
+        volumeMounts:
+          - name: log-dir
+            mountPath: C:/Logs
+      - name: readlog
+        image: mcr.microsoft.com/windows/servercore:ltsc2019
+        resources:
+          limits:
+            cpu: 1
+            memory: 800M
+          requests:
+            cpu: .1
+            memory: 300M
+        command:
+          - powershell.exe
+          - -command
+          - "get-content -wait -tail 0 C:/Logs/ping.log"
+        volumeMounts:
+          - name: log-dir
+            mountPath: C:/Logs
+      volumes:
+      - name: log-dir
+        emptyDir: {}
+  selector:
+    matchLabels:
+      app: logmonitor
